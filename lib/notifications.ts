@@ -55,7 +55,14 @@ export async function requestNotificationPermission(): Promise<boolean> {
  * 기존 일일 알림 취소
  */
 export async function cancelDailyNotification() {
-  await Notifications.cancelScheduledNotificationAsync(DAILY_NOTIFICATION_ID);
+  // 웹 환경에서는 알림 기능 미지원
+  if (Platform.OS === 'web') return;
+  
+  try {
+    await Notifications.cancelScheduledNotificationAsync(DAILY_NOTIFICATION_ID);
+  } catch (error) {
+    console.error('알림 취소 오류:', error);
+  }
 }
 
 /**
@@ -67,6 +74,12 @@ export async function scheduleDailyMealNotification(
   school: School,
   mealTypes: string[]
 ): Promise<boolean> {
+  // 웹 환경에서는 알림 기능 미지원
+  if (Platform.OS === 'web') {
+    console.warn('알림 기능은 모바일 환경에서만 지원됩니다');
+    return false;
+  }
+  
   try {
     // 기존 알림 취소
     await cancelDailyNotification();
@@ -125,5 +138,8 @@ export async function scheduleDailyMealNotification(
  * 현재 예약된 알림 목록 조회
  */
 export async function getScheduledNotifications() {
+  // 웹 환경에서는 알림 기능 미지원
+  if (Platform.OS === 'web') return [];
+  
   return Notifications.getAllScheduledNotificationsAsync();
 }
