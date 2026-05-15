@@ -21,6 +21,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useColors } from '@/hooks/use-colors';
 import { useSettings } from '@/lib/settings-context';
 import { getAllCacheInfo, formatCacheSize, formatCacheDateRange, deleteCacheByDateRange, deleteAllCacheForSchool } from '@/lib/cache-management';
+import { useTheme, ThemeMode } from '@/lib/theme-context';
 import { CacheInfo } from '@/lib/cache-management';
 
 const MEAL_TYPE_OPTIONS = [
@@ -31,10 +32,16 @@ const MEAL_TYPE_OPTIONS = [
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
+  { value: 'light', label: '라이트' },
+  { value: 'dark', label: '다크' },
+  { value: 'system', label: '시스템 설정' },
+];
 
 export default function SettingsScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { themeMode, setThemeMode } = useTheme();
   const {
     selectedSchool,
     notificationEnabled,
@@ -57,6 +64,7 @@ export default function SettingsScreen() {
   const [cacheInfos, setCacheInfos] = useState<CacheInfo[]>([]);
   const [isLoadingCache, setIsLoadingCache] = useState(false);
   const [selectedCacheForDelete, setSelectedCacheForDelete] = useState<CacheInfo | null>(null);
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
 
   useEffect(() => {
     loadCacheInfo();
@@ -141,6 +149,16 @@ export default function SettingsScreen() {
     const period = hour < 12 ? '오전' : '오후';
     const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
     return `${period} ${displayHour}:${String(minute).padStart(2, '0')}`;
+  };
+
+  const getThemeLabel = (mode: ThemeMode) => {
+    return THEME_OPTIONS.find((opt) => opt.value === mode)?.label || '시스템 설정';
+  };
+
+  const handleSetTheme = async (mode: ThemeMode) => {
+    await setThemeMode(mode);
+    setShowThemeSelector(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
   const styles = StyleSheet.create({
@@ -517,6 +535,30 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* 테마 설정 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>테마</Text>
+          <View style={styles.card}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.row,
+                { backgroundColor: pressed ? colors.border + '30' : 'transparent' },
+              ]}
+              onPress={() => setShowThemeSelector(true)}
+            >
+              <View style={[styles.rowIcon, { backgroundColor: '#FF6B3520' }]}>
+                <IconSymbol name="sun.max.fill" size={18} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowLabel}>배경 테마</Text>
+                <Text style={styles.noSchoolText}>{getThemeLabel(themeMode)}</Text>
+              </View>
+              <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+            </Pressable>
+          </View>
+        </View>
+
+
         {/* 좋아하는 반찬 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>좋아하는 반찬</Text>
@@ -780,6 +822,81 @@ export default function SettingsScreen() {
                 <Text style={styles.modalConfirmText}>확인</Text>
               </Pressable>
             </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* 테마 선택 모달 */}
+      <Modal
+        visible={showThemeSelector}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowThemeSelector(false)}
+      >
+        <Pressable
+          style={[styles.modalOverlay, { backgroundColor: '#00000050' }]}
+          onPress={() => setShowThemeSelector(false)}
+        >
+          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>테마 선택</Text>
+
+            <View style={{ gap: 12, marginBottom: 24 }}>
+              {THEME_OPTIONS.map((option) => (
+                <Pressable
+                  key={option.value}
+                  style={({ pressed }) => [
+                    {
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      borderRadius: 12,
+                      backgroundColor: pressed ? colors.border + '20' : colors.surface,
+                      borderWidth: themeMode === option.value ? 2 : 1,
+                      borderColor: themeMode === option.value ? colors.primary : colors.border,
+                    },
+                  ]}
+                  onPress={() => handleSetTheme(option.value)}
+                >
+                  <View
+                    style={[
+                      {
+                        width: 24,
+                        height: 24,
+                        borderRadius: 12,
+                        borderWidth: 2,
+                        borderColor: colors.primary,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 12,
+                      },
+                      themeMode === option.value && {
+                        backgroundColor: colors.primary,
+                      },
+                    ]}
+                  >
+                    {themeMode === option.value && (
+                      <Text style={{ color: '#fff', fontWeight: '700' }}>✓</Text>
+                    )}
+                  </View>
+                  <Text
+                    style={[
+                      { fontSize: 16, color: colors.foreground, fontWeight: '500' },
+                      themeMode === option.value && { fontWeight: '700' },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [styles.modalConfirmButton, { opacity: pressed ? 0.8 : 1 }]}
+              onPress={() => setShowThemeSelector(false)}
+            >
+              <Text style={styles.modalConfirmText}>닫기</Text>
+            </Pressable>
           </Pressable>
         </Pressable>
       </Modal>

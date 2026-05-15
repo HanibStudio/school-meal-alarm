@@ -27,6 +27,7 @@ import {
 import { getMealFromCache } from '@/lib/meal-cache';
 import { downloadMealDataByRange } from '@/lib/bulk-download';
 import { isDishFavorite, getMatchingKeywords } from '@/lib/favorite-dishes';
+import { shareMealMenu } from '@/lib/share-utils';
 
 const MEAL_TYPES: { code: MealType; label: string }[] = [
   { code: '1', label: '조식' },
@@ -484,9 +485,22 @@ function HomeScreen() {
                 <Text style={styles.mealCardTitle}>
                   {MEAL_TYPES.find((m) => m.code === activeMealType)?.label ?? '급식'} 메뉴
                 </Text>
-                {calories ? (
-                  <Text style={styles.calorieText}>{calories} kcal</Text>
-                ) : null}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  {calories ? (
+                    <Text style={styles.calorieText}>{calories} kcal</Text>
+                  ) : null}
+                  {currentMeal && (
+                    <Pressable
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        shareMealMenu(currentMeal, activeMealType, selectedSchool?.SCHUL_NM || '학교', formatDisplayDate(currentDate));
+                      }}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+                    >
+                      <IconSymbol name="square.and.arrow.up" size={20} color={colors.primary} />
+                    </Pressable>
+                  )}
+                </View>
               </View>
 
               {isLoading ? (

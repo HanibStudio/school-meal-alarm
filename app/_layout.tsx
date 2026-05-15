@@ -10,6 +10,7 @@ import '../global.css';
 import { ThemeProvider } from '@/lib/theme-provider';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SettingsProvider } from '@/lib/settings-context';
+import { ThemeProvider as CustomThemeProvider } from '@/lib/theme-context';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,9 +32,10 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <SettingsProvider>
-        <NavThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <CustomThemeProvider>
+      <ThemeProvider>
+        <SettingsProvider>
+          <NavThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="school-search" options={{ headerShown: false }} />
@@ -43,5 +45,6 @@ export default function RootLayout() {
         </NavThemeProvider>
       </SettingsProvider>
     </ThemeProvider>
+    </CustomThemeProvider>
   );
 }
