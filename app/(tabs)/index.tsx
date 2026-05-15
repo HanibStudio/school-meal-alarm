@@ -13,6 +13,7 @@ import * as Haptics from 'expo-haptics';
 
 import { ScreenContainer } from '@/components/screen-container';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { DateRangePicker } from '@/components/date-range-picker';
 import { useColors } from '@/hooks/use-colors';
 import { useSettings } from '@/lib/settings-context';
 import {
@@ -23,6 +24,8 @@ import {
   MealItem,
   MealType,
 } from '@/lib/neis-api';
+import { getMealFromCache } from '@/lib/meal-cache';
+import { downloadMealDataByRange } from '@/lib/bulk-download';
 
 const MEAL_TYPES: { code: MealType; label: string }[] = [
   { code: '1', label: '조식' },
@@ -49,7 +52,7 @@ function isToday(date: Date): boolean {
   );
 }
 
-export default function HomeScreen() {
+function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
   const { selectedSchool, selectedMealTypes } = useSettings();
@@ -62,6 +65,8 @@ export default function HomeScreen() {
     '3': null,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const fetchMeals = useCallback(async (date: Date) => {
     if (!selectedSchool) return;
@@ -70,26 +75,55 @@ export default function HomeScreen() {
     const dateStr = formatDateToYYYYMMDD(date);
 
     try {
-      const results = await Promise.all(
-        MEAL_TYPES.map((mt) =>
-          getMealInfo(
-            selectedSchool.ATPT_OFCDC_SC_CODE,
-            selectedSchool.SD_SCHUL_CODE,
-            dateStr,
-            mt.code
-          )
-        )
-      );
-
-      const newData: Record<MealType, MealItem | null> = {
-        '1': results[0][0] ?? null,
-        '2': results[1][0] ?? null,
-        '3': results[2][0] ?? null,
+      // 캐시에서 먼저 확인
+      const cachedMeals: Record<MealType, MealItem | null> = {
+        '1': null,
+        '2': null,
+        '3': null,
       };
-      setMealData(newData);
+
+      let hasCachedData = false;
+      for (const mt of MEAL_TYPES) {
+        const cached = await getMealFromCache(
+          selectedSchool.ATPT_OFCDC_SC_CODE,
+          selectedSchool.SD_SCHUL_CODE,
+          dateStr
+        );
+        if (cached) {
+          const mealForType = cached.find((m) => m.MMEAL_SC_CODE === mt.code);
+          if (mealForType) {
+            cachedMeals[mt.code] = mealForType;
+            hasCachedData = true;
+          }
+        }
+      }
+
+      // 캐시 데이터가 있으면 사용, 없으면 API 호출
+      if (hasCachedData) {
+        setMealData(cachedMeals);
+      } else {
+        const results = await Promise.all(
+          MEAL_TYPES.map((mt) =>
+            getMealInfo(
+              selectedSchool.ATPT_OFCDC_SC_CODE,
+              selectedSchool.SD_SCHUL_CODE,
+              dateStr,
+              mt.code
+            )
+          )
+        );
+
+        const newData: Record<MealType, MealItem | null> = {
+          '1': results[0][0] ?? null,
+          '2': results[1][0] ?? null,
+          '3': results[2][0] ?? null,
+        };
+        setMealData(newData);
+      }
 
       // 데이터 있는 첫 번째 식사 탭으로 자동 이동
-      const preferred = selectedMealTypes.find((t) => newData[t as MealType] !== null);
+      const newDataToCheck = hasCachedData ? cachedMeals : { '1': null, '2': null, '3': null };
+      const preferred = selectedMealTypes.find((t) => newDataToCheck[t as MealType] !== null);
       if (preferred) setActiveMealType(preferred as MealType);
     } catch (err) {
       console.error(err);
@@ -119,6 +153,27 @@ export default function HomeScreen() {
   const goToToday = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setCurrentDate(new Date());
+  };
+
+  const handleDownloadData = async (startDate: string, endDate: string) => {
+    if (!selectedSchool) return;
+
+    setIsDownloading(true);
+    try {
+      const result = await downloadMealDataByRange(selectedSchool, startDate, endDate);
+      if (result.success) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        // 다운로드 후 현재 날짜 데이터 새로고침
+        await fetchMeals(currentDate);
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    } catch (err) {
+      console.error(err);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const currentMeal = mealData[activeMealType];
@@ -317,6 +372,15 @@ export default function HomeScreen() {
         >
           <IconSymbol name="magnifyingglass" size={22} color={colors.primary} />
         </Pressable>
+        {selectedSchool && (
+          <Pressable
+            onPress={() => setShowDatePicker(true)}
+            style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1, padding: 4, marginLeft: 8 }]}
+            disabled={isDownloading}
+          >
+            <IconSymbol name="arrow.down" size={22} color={colors.primary} />
+          </Pressable>
+        )}
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -441,6 +505,16 @@ export default function HomeScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* 날짜 범위 선택 모달 */}
+      <DateRangePicker
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        onConfirm={handleDownloadData}
+        isLoading={isDownloading}
+      />
     </ScreenContainer>
   );
 }
+
+export default HomeScreen;
