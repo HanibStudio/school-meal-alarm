@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,7 @@ import {
   Pressable,
   Modal,
   TouchableOpacity,
-  TextInput,
-  FlatList,
-  ActivityIndicator,
-  Alert,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -20,8 +17,6 @@ import { ScreenContainer } from '@/components/screen-container';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useColors } from '@/hooks/use-colors';
 import { useSettings } from '@/lib/settings-context';
-import { getAllCacheInfo, formatCacheSize, formatCacheDateRange, deleteCacheByDateRange, deleteAllCacheForSchool } from '@/lib/cache-management';
-import { CacheInfo } from '@/lib/cache-management';
 
 const MEAL_TYPE_OPTIONS = [
   { code: '1', label: '조식 (아침)' },
@@ -41,42 +36,19 @@ export default function SettingsScreen() {
     notificationHour,
     notificationMinute,
     selectedMealTypes,
-    favoriteDishKeywords,
     setNotificationEnabled,
     setNotificationTime,
     setSelectedMealTypes,
-    addFavoriteDish,
-    removeFavoriteDish,
   } = useSettings();
 
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempHour, setTempHour] = useState(notificationHour);
   const [tempMinute, setTempMinute] = useState(notificationMinute);
-  const [showFavoriteDishInput, setShowFavoriteDishInput] = useState(false);
-  const [newKeyword, setNewKeyword] = useState('');
-  const [cacheInfos, setCacheInfos] = useState<CacheInfo[]>([]);
-  const [isLoadingCache, setIsLoadingCache] = useState(false);
-  const [selectedCacheForDelete, setSelectedCacheForDelete] = useState<CacheInfo | null>(null);
-
-  useEffect(() => {
-    loadCacheInfo();
-  }, []);
-
-  const loadCacheInfo = async () => {
-    setIsLoadingCache(true);
-    try {
-      const infos = await getAllCacheInfo();
-      setCacheInfos(infos);
-    } catch (err) {
-      console.error('캐시 정보 로드 오류:', err);
-    } finally {
-      setIsLoadingCache(false);
-    }
-  };
 
   const handleToggleNotification = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (value && !selectedSchool) {
+      // 학교 미선택 시 검색 화면으로 이동
       router.push('/school-search');
       return;
     }
@@ -88,7 +60,7 @@ export default function SettingsScreen() {
     const current = selectedMealTypes;
     let updated: string[];
     if (current.includes(code)) {
-      if (current.length === 1) return;
+      if (current.length === 1) return; // 최소 1개는 선택
       updated = current.filter((c) => c !== code);
     } else {
       updated = [...current, code].sort();
@@ -99,42 +71,6 @@ export default function SettingsScreen() {
   const handleConfirmTime = async () => {
     await setNotificationTime(tempHour, tempMinute);
     setShowTimePicker(false);
-  };
-
-  const handleAddFavoriteDish = async () => {
-    if (newKeyword.trim()) {
-      await addFavoriteDish(newKeyword);
-      setNewKeyword('');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleDeleteCache = async (cacheInfo: CacheInfo) => {
-    Alert.alert(
-      '캐시 삭제',
-      `${formatCacheDateRange(cacheInfo.startDate, cacheInfo.endDate)}의 데이터를 삭제하시겠습니까?`,
-      [
-        { text: '취소', onPress: () => {}, style: 'cancel' },
-        {
-          text: '삭제',
-          onPress: async () => {
-            try {
-              await deleteCacheByDateRange(
-                cacheInfo.atptCode,
-                cacheInfo.schulCode,
-                cacheInfo.startDate,
-                cacheInfo.endDate
-              );
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              await loadCacheInfo();
-            } catch (err) {
-              console.error('캐시 삭제 오류:', err);
-            }
-          },
-          style: 'destructive',
-        },
-      ]
-    );
   };
 
   const formatTime = (hour: number, minute: number) => {
@@ -247,64 +183,7 @@ export default function SettingsScreen() {
       paddingHorizontal: 4,
       lineHeight: 18,
     },
-    // 반찬 키워드 태그
-    keywordTag: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.primary + '20',
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      gap: 6,
-      marginRight: 8,
-      marginBottom: 8,
-    },
-    keywordText: {
-      fontSize: 14,
-      color: colors.primary,
-      fontWeight: '600',
-    },
-    keywordRemoveButton: {
-      padding: 2,
-    },
-    keywordInput: {
-      flex: 1,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: colors.border,
-      fontSize: 14,
-      color: colors.foreground,
-      marginBottom: 8,
-    },
-    // 캐시 정보
-    cacheItem: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 0.5,
-      borderBottomColor: colors.border,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    cacheItemInfo: {
-      flex: 1,
-    },
-    cacheItemDate: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.foreground,
-      marginBottom: 4,
-    },
-    cacheItemSize: {
-      fontSize: 12,
-      color: colors.muted,
-    },
-    cacheItemDeleteButton: {
-      padding: 8,
-    },
-    // Modal
+    // Time Picker Modal
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.5)',
@@ -434,6 +313,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>알림</Text>
           <View style={styles.card}>
+            {/* 알림 ON/OFF */}
             <View style={styles.row}>
               <View style={[styles.rowIcon, { backgroundColor: '#FF6B3520' }]}>
                 <IconSymbol
@@ -453,6 +333,7 @@ export default function SettingsScreen() {
 
             <View style={styles.rowDivider} />
 
+            {/* 알림 시간 */}
             <Pressable
               style={({ pressed }) => [
                 styles.row,
@@ -515,99 +396,10 @@ export default function SettingsScreen() {
               </View>
             ))}
           </View>
-        </View>
-
-        {/* 좋아하는 반찬 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>좋아하는 반찬</Text>
-          <View style={[styles.card, { padding: 16 }]}>
-            {favoriteDishKeywords.length > 0 && (
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
-                {favoriteDishKeywords.map((keyword) => (
-                  <View key={keyword} style={styles.keywordTag}>
-                    <Text style={styles.keywordText}>{keyword}</Text>
-                    <Pressable
-                      style={styles.keywordRemoveButton}
-                      onPress={() => removeFavoriteDish(keyword)}
-                    >
-                      <IconSymbol name="xmark" size={14} color={colors.primary} />
-                    </Pressable>
-                  </View>
-                ))}
-              </View>
-            )}
-            <Pressable
-              style={({ pressed }) => [
-                {
-                  opacity: pressed ? 0.7 : 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  backgroundColor: colors.primary + '10',
-                  borderRadius: 10,
-                },
-              ]}
-              onPress={() => setShowFavoriteDishInput(true)}
-            >
-              <IconSymbol name="plus" size={18} color={colors.primary} />
-              <Text style={{ fontSize: 14, color: colors.primary, fontWeight: '600' }}>
-                반찬 추가
-              </Text>
-            </Pressable>
-          </View>
           <Text style={styles.infoText}>
-            * 입력한 반찬이 급식 메뉴에 있으면 하이라이트됩니다
+            * 선택한 급식 종류가 알림 및 홈 화면에 표시됩니다
           </Text>
         </View>
-
-        {/* 캐시 관리 */}
-        {selectedSchool && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>캐시 관리</Text>
-            <View style={styles.card}>
-              {isLoadingCache ? (
-                <View style={{ padding: 20, alignItems: 'center' }}>
-                  <ActivityIndicator color={colors.primary} size="large" />
-                </View>
-              ) : cacheInfos.length === 0 ? (
-                <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text style={{ fontSize: 14, color: colors.muted }}>
-                    다운로드된 데이터가 없습니다
-                  </Text>
-                </View>
-              ) : (
-                <FlatList
-                  data={cacheInfos}
-                  keyExtractor={(item, idx) => idx.toString()}
-                  renderItem={({ item, index }) => (
-                    <>
-                      {index > 0 && <View style={styles.rowDivider} />}
-                      <View style={styles.cacheItem}>
-                        <View style={styles.cacheItemInfo}>
-                          <Text style={styles.cacheItemDate}>
-                            {formatCacheDateRange(item.startDate, item.endDate)}
-                          </Text>
-                          <Text style={styles.cacheItemSize}>
-                            {formatCacheSize(item.sizeBytes)} · {item.count}일
-                          </Text>
-                        </View>
-                        <Pressable
-                          style={styles.cacheItemDeleteButton}
-                          onPress={() => handleDeleteCache(item)}
-                        >
-                          <IconSymbol name="trash" size={18} color={colors.error} />
-                        </Pressable>
-                      </View>
-                    </>
-                  )}
-                  scrollEnabled={false}
-                />
-              )}
-            </View>
-          </View>
-        )}
 
         {/* 앱 정보 */}
         <View style={styles.section}>
@@ -634,54 +426,6 @@ export default function SettingsScreen() {
         </View>
       </ScrollView>
 
-      {/* 반찬 추가 모달 */}
-      <Modal
-        visible={showFavoriteDishInput}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowFavoriteDishInput(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowFavoriteDishInput(false)}
-        >
-          <Pressable style={styles.modalContent} onPress={() => {}}>
-            <Text style={styles.modalTitle}>좋아하는 반찬 추가</Text>
-
-            <TextInput
-              style={styles.keywordInput}
-              placeholder="반찬 이름 입력 (예: 계란, 우동, 김밥)"
-              placeholderTextColor={colors.muted}
-              value={newKeyword}
-              onChangeText={setNewKeyword}
-              returnKeyType="done"
-              onSubmitEditing={handleAddFavoriteDish}
-            />
-
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalCancelButton,
-                  { opacity: pressed ? 0.7 : 1 },
-                ]}
-                onPress={() => setShowFavoriteDishInput(false)}
-              >
-                <Text style={styles.modalCancelText}>취소</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalConfirmButton,
-                  { opacity: pressed ? 0.8 : 1 },
-                ]}
-                onPress={handleAddFavoriteDish}
-              >
-                <Text style={styles.modalConfirmText}>추가</Text>
-              </Pressable>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
-
       {/* 시간 선택 모달 */}
       <Modal
         visible={showTimePicker}
@@ -697,6 +441,7 @@ export default function SettingsScreen() {
             <Text style={styles.modalTitle}>알림 시간 설정</Text>
 
             <View style={styles.timePickerRow}>
+              {/* 시간 선택 */}
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>시</Text>
                 <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
@@ -727,6 +472,7 @@ export default function SettingsScreen() {
 
               <Text style={{ fontSize: 28, fontWeight: '700', color: colors.foreground, alignSelf: 'center', marginTop: 20 }}>:</Text>
 
+              {/* 분 선택 */}
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>분</Text>
                 <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
@@ -756,6 +502,7 @@ export default function SettingsScreen() {
               </View>
             </View>
 
+            {/* 현재 선택 미리보기 */}
             <Text style={{ textAlign: 'center', fontSize: 20, fontWeight: '700', color: colors.primary, marginBottom: 20 }}>
               {formatTime(tempHour, tempMinute)}
             </Text>

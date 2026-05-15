@@ -1,0 +1,11 @@
+--- app/(tabs)/index.tsx
++++ app/(tabs)/index.tsx
+@@ -478,6 +479,8 @@ function HomeScreen() {
+                   {menuItems.map((item, idx) => {
+                     // 음식명과 알레르기 번호 분리: "현미찹쌀밥(영)" → 음식명 + 알레르기
+                     const allergyMatch = item.match(/^(.*?)(\(.*\))?(\d[\d.]*)?$/);
+                     const foodName = item.replace(/\d[\d.]*\.$/, '').replace(/\(\w+\/?\w*\)/g, '').trim();
+                     const allergyInfo = item.match(/\d[\d.]*\./)?.[0] ?? '';
++                    const isFavorite = isDishFavorite(item, favoriteDishKeywords);
++                    const matchingKeywords = getMatchingKeywords(item, favoriteDishKeywords);
+ 

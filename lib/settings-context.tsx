@@ -2,13 +2,18 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { AppSettings, loadSettings, saveSelectedSchool, saveNotificationSettings, saveMealTypes } from './settings';
 import { School } from './neis-api';
 import { scheduleDailyMealNotification, cancelDailyNotification, setupNotificationChannel, setupNotificationHandler } from './notifications';
+import { loadFavoriteDishes, saveFavoriteDishes } from './favorite-dishes';
 
 interface SettingsContextValue extends AppSettings {
   isLoading: boolean;
+  favoriteDishKeywords: string[];
   setSelectedSchool: (school: School | null) => Promise<void>;
   setNotificationEnabled: (enabled: boolean) => Promise<void>;
   setNotificationTime: (hour: number, minute: number) => Promise<void>;
   setSelectedMealTypes: (types: string[]) => Promise<void>;
+  addFavoriteDish: (keyword: string) => Promise<void>;
+  removeFavoriteDish: (keyword: string) => Promise<void>;
+  setFavoriteDishes: (keywords: string[]) => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -22,12 +27,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     notificationMinute: 30,
     selectedMealTypes: ['2'],
   });
+  const [favoriteDishKeywords, setFavoriteDishKeywords] = useState<string[]>([]);
 
   useEffect(() => {
     setupNotificationHandler();
     setupNotificationChannel();
     loadSettings().then((loaded) => {
       setSettings(loaded);
+    });
+    loadFavoriteDishes().then((fav) => {
+      setFavoriteDishKeywords(fav.keywords);
       setIsLoading(false);
     });
   }, []);
@@ -91,15 +100,39 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [settings]);
 
+  const addFavoriteDish = useCallback(async (keyword: string) => {
+    const trimmed = keyword.trim();
+    if (trimmed && !favoriteDishKeywords.includes(trimmed)) {
+      const updated = [...favoriteDishKeywords, trimmed];
+      setFavoriteDishKeywords(updated);
+      await saveFavoriteDishes(updated);
+    }
+  }, [favoriteDishKeywords]);
+
+  const removeFavoriteDish = useCallback(async (keyword: string) => {
+    const updated = favoriteDishKeywords.filter((k) => k !== keyword);
+    setFavoriteDishKeywords(updated);
+    await saveFavoriteDishes(updated);
+  }, [favoriteDishKeywords]);
+
+  const setFavoriteDishes = useCallback(async (keywords: string[]) => {
+    setFavoriteDishKeywords(keywords);
+    await saveFavoriteDishes(keywords);
+  }, []);
+
   return (
     <SettingsContext.Provider
       value={{
         ...settings,
         isLoading,
+        favoriteDishKeywords,
         setSelectedSchool,
         setNotificationEnabled,
         setNotificationTime,
         setSelectedMealTypes,
+        addFavoriteDish,
+        removeFavoriteDish,
+        setFavoriteDishes,
       }}
     >
       {children}

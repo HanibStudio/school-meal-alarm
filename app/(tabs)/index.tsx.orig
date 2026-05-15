@@ -26,7 +26,6 @@ import {
 } from '@/lib/neis-api';
 import { getMealFromCache } from '@/lib/meal-cache';
 import { downloadMealDataByRange } from '@/lib/bulk-download';
-import { isDishFavorite, getMatchingKeywords } from '@/lib/favorite-dishes';
 
 const MEAL_TYPES: { code: MealType; label: string }[] = [
   { code: '1', label: '조식' },
@@ -56,7 +55,7 @@ function isToday(date: Date): boolean {
 function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { selectedSchool, selectedMealTypes, favoriteDishKeywords } = useSettings();
+  const { selectedSchool, selectedMealTypes } = useSettings();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeMealType, setActiveMealType] = useState<MealType>('2');
@@ -307,27 +306,6 @@ function HomeScreen() {
       fontSize: 11,
       color: colors.muted,
     },
-    menuItemFavorite: {
-      backgroundColor: colors.primary + '15',
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-      borderRadius: 10,
-      borderLeftWidth: 3,
-      borderLeftColor: colors.primary,
-    },
-    menuDotFavorite: {
-      backgroundColor: colors.primary,
-    },
-    menuTextFavorite: {
-      color: colors.primary,
-      fontWeight: '700',
-    },
-    menuMatchingKeywordText: {
-      fontSize: 12,
-      color: colors.primary,
-      fontWeight: '600',
-      marginTop: 2,
-    },
     emptyContainer: {
       padding: 40,
       alignItems: 'center',
@@ -501,22 +479,12 @@ function HomeScreen() {
                     const allergyMatch = item.match(/^(.*?)(\(.*\))?(\d[\d.]*)?$/);
                     const foodName = item.replace(/\d[\d.]*\.$/, '').replace(/\(\w+\/?\w*\)/g, '').trim();
                     const allergyInfo = item.match(/\d[\d.]*\./)?.[0] ?? '';
-                    const isFavorite = isDishFavorite(item, favoriteDishKeywords);
-                    const matchingKeywords = getMatchingKeywords(item, favoriteDishKeywords);
 
                     return (
-                      <View key={idx} style={[styles.menuItem, isFavorite && styles.menuItemFavorite]}>
-                        <View style={[styles.menuDot, isFavorite && styles.menuDotFavorite]} />
+                      <View key={idx} style={styles.menuItem}>
+                        <View style={styles.menuDot} />
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.menuText, isFavorite && styles.menuTextFavorite]}>
-                            {foodName}
-                            {isFavorite && ' ❤️'}
-                          </Text>
-                          {isFavorite && matchingKeywords.length > 0 && (
-                            <Text style={styles.menuMatchingKeywordText}>
-                              좋아하는 메뉴: {matchingKeywords.join(', ')}
-                            </Text>
-                          )}
+                          <Text style={styles.menuText}>{foodName}</Text>
                           {allergyInfo ? (
                             <Text style={styles.menuAllergyText}>알레르기: {allergyInfo}</Text>
                           ) : null}
