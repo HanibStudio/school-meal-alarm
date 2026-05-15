@@ -1,0 +1,51 @@
+{
+  "build_command": "pnpm run build",
+  "capabilities": [
+    "server",
+    "db",
+    "user"
+  ],
+  "dev_command": "pnpm run dev",
+  "env_vars": {
+    "DATABASE_URL": "mysql://2TU6AUqLnVTR2HM.root:eGeBAgN6yC05X27ac2Tz@gateway06.us-east-1.prod.aws.tidbcloud.com:4000/cqE69HKwwBKWCmb57jUAFe?ssl={\"rejectUnauthorized\":true}"
+  },
+  "experiments": [
+    "no_db_push"
+  ],
+  "git_remote": {
+    "repo_url": "s3://vida-prod-gitrepo/webdev-git/310519663663209371/cqE69HKwwBKWCmb57jUAFe",
+    "access_key_id": "ASIAZV3A2ECZHJKITMUF",
+    "secret_access_key": "cAX7bBPIuXdvgHZtVgRltHX/hTE7iOFpWmsB5Ofj",
+    "session_token": "IQoJb3JpZ2luX2VjEK3//////////wEaCXVzLWVhc3QtMSJHMEUCID2i1j1y4uiw6EL2WnZgl4x+O7NULc9KaCZwKzJDgN3BAiEArFUaUmNJrV7YXk312/sHXGaJdvva0rQJE05kL+p907Qq9QMIdhAEGgw2NjUzODYwOTg4NjYiDAIwgBxJfpJqAqxxzyrSA+Der+jz8DH63jH1iBKN3+5VTc26TUqg2pX0PbcAJGZAgALGt7ZYsCR59OgE3guCVzvAldxOFqlafUYmQRtLTEWPPTxQboHL+/7KPKiM8SXMKXK0UTxCDznXZLroAjKe3gB8PPcNL4hsVdisEEaTQsQOkhZCMD7RmiYCLP8Jf/ekHp9y/tDuwIV0VdBSK+kpcKIdYnbsWRFuxRGiL0jgS2TVQY7qQaM/1Su04YTqepqRKKSHCgymzvmjHy7zRoaxaz6EL7YSaWt48LzGSYuxzicamdxAlTIWREwt1Zz0kM9LgVch+q8tCz1Zr7J/8vdJopTQkeVuYrWA2W8BEm4HH7cWoh1T2flyNpa5rfsnIOPn1fdAuK0pJJO7BHOOArzoq6s3/ZA5yeIxS5AEnjGLTfHQsd1FaaEcHZGtlrEF57sZzAczjNCyvE2d1cTh4xu2gtFZluzEGm7Tvk9V3jHTXG/KdtuHN74C/TXdz7tME6meDBU1206c6sXGp54CVrmuoEx4OMe7J7Yhf3NUcgcP3kuNN3tCeFjRXAlofjvMHAEM1VmXY6cP1oKZezPNuima++qXWJLtVpPydIbWT3WX3x2eMwZDU93KmCj+OSY/f84IFwUw2q+c0AY6nQH3URNeWgmTbm2XmClDrlpXpRLSV0wm3dezpuCTFlx52Qa7aGa2NUDn29XWeoIxJkLtKQvNbm6nvapp6k3SmfQVl5mJdSBDliuKcFxpXhpHsxhUOzAuqcHiAvISrLcjM2wj6SepWXIKqAIL0aNe5I7RAccXFm2OKdui8HB5/IaTErYdlsK3+WmrlgCJ3A9FTAbEmeweE/COwSSDHyLu",
+    "expiration": "2026-05-16T00:55:54.000Z"
+  },
+  "name": "school-meal-alarm",
+  "path": "/home/ubuntu/school-meal-alarm",
+  "port": 3000,
+  "secrets": {
+    "BUILT_IN_FORGE_API_KEY": "n7xV4eLRTRpcZsfQMVKrNQ",
+    "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+    "EXPO_APP_QR_URL": "exps://8081-i95l2buvx33v6mfyx7mds-ad7dd5bd.sg1.manus.computer",
+    "EXPO_PACKAGER_PROXY_URL": "https://8081-i95l2buvx33v6mfyx7mds-ad7dd5bd.sg1.manus.computer",
+    "EXPO_PUBLIC_API_BASE_URL": "https://3000-i95l2buvx33v6mfyx7mds-ad7dd5bd.sg1.manus.computer",
+    "EXPO_PUBLIC_OAUTH_PORTAL_URL": "https://manus.im",
+    "EXPO_PUBLIC_OAUTH_SERVER_URL": "https://api.manus.im",
+    "EXPO_PUBLIC_OWNER_NAME": "롤캐",
+    "EXPO_PUBLIC_OWNER_OPEN_ID": "MoXqqpPfr7L5Wz8bNgQZxZ",
+    "JWT_SECRET": "jV25S6ssftFRgQ8JHrnKEz",
+    "OAUTH_SERVER_URL": "https://api.manus.im",
+    "OWNER_NAME": "롤캐",
+    "OWNER_OPEN_ID": "MoXqqpPfr7L5Wz8bNgQZxZ",
+    "REACT_NATIVE_PACKAGER_HOSTNAME": "8081-i95l2buvx33v6mfyx7mds-ad7dd5bd.sg1.manus.computer",
+    "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",
+    "VITE_ANALYTICS_WEBSITE_ID": "c4399ec3-51e8-48ba-bf63-18fcee3d165c",
+    "VITE_APP_ID": "cqE69HKwwBKWCmb57jUAFe",
+    "VITE_APP_LOGO": "",
+    "VITE_APP_TITLE": "급식 알리미",
+    "VITE_FRONTEND_FORGE_API_KEY": "kmMRPGFsXcNvVUVxETAmQJ",
+    "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+  },
+  "template_id": "app",
+  "test_command": "pnpm test"
+}
