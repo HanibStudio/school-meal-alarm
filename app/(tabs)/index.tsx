@@ -185,10 +185,11 @@ function HomeScreen() {
   const styles = StyleSheet.create({
     header: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
       paddingHorizontal: 20,
-      paddingVertical: 14,
+      paddingVertical: 12,
+      paddingTop: 16,
       borderBottomWidth: 0.5,
       borderBottomColor: colors.border,
     },
@@ -197,10 +198,12 @@ function HomeScreen() {
       fontWeight: '700',
       color: colors.foreground,
       flex: 1,
+      marginBottom: 4,
     },
     headerSubtitle: {
       fontSize: 12,
       color: colors.muted,
+      lineHeight: 16,
     },
     dateNav: {
       flexDirection: 'row',

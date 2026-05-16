@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeContext } from '@/lib/theme-provider';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -24,6 +25,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         const saved = await AsyncStorage.getItem(THEME_MODE_KEY);
         if (saved === 'light' || saved === 'dark' || saved === 'system') {
           setThemeModeState(saved);
+          // 테마 즉시 적용
+          const effectiveTheme = saved === 'system' ? (systemColorScheme ?? 'light') : saved;
+          try {
+            const { setColorScheme } = useThemeContext();
+            setColorScheme(effectiveTheme as 'light' | 'dark');
+          } catch (e) {
+            // ThemeProvider가 아직 초기화되지 않을 수 있으로 무시
+          }
         }
       } catch (error) {
         console.error('테마 모드 로드 오류:', error);
@@ -31,11 +40,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     };
 
     loadThemeMode();
-  }, []);
+  }, [systemColorScheme]);
 
   const handleSetThemeMode = async (mode: ThemeMode) => {
     setThemeModeState(mode);
+    
     try {
+      // 실제 적용할 테마 결정
+      const effectiveTheme = mode === 'system' ? (systemColorScheme ?? 'light') : mode;
+      
+      // 기존 ThemeProvider에 적용
+      const { setColorScheme } = useThemeContext();
+      setColorScheme(effectiveTheme as 'light' | 'dark');
+      
       await AsyncStorage.setItem(THEME_MODE_KEY, mode);
     } catch (error) {
       console.error('테마 모드 저장 오류:', error);
