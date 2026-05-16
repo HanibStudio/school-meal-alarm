@@ -12,11 +12,24 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SettingsProvider } from '@/lib/settings-context';
 import { ThemeProvider as CustomThemeProvider } from '@/lib/theme-context';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function AppContent() {
   const colorScheme = useColorScheme();
+
+  return (
+    <NavThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="school-search" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+      <StatusBar style="auto" />
+    </NavThemeProvider>
+  );
+}
+
+export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -35,16 +48,9 @@ export default function RootLayout() {
     <CustomThemeProvider>
       <ThemeProvider>
         <SettingsProvider>
-          <NavThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="school-search" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        </NavThemeProvider>
-      </SettingsProvider>
-    </ThemeProvider>
+          <AppContent />
+        </SettingsProvider>
+      </ThemeProvider>
     </CustomThemeProvider>
   );
 }
