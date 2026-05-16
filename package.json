@@ -33,6 +33,7 @@
     "cookie": "^1.1.1",
     "dotenv": "^16.6.1",
     "drizzle-orm": "^0.44.7",
+    "esbuild": "^0.25.12",
     "expo": "~54.0.34",
     "expo-audio": "~1.1.0",
     "expo-build-properties": "^1.0.10",
