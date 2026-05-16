@@ -2,6 +2,8 @@ import { Platform } from "react-native";
 import { getApiBaseUrl } from "@/constants/oauth";
 import * as Auth from "./auth";
 
+export const API_URL = process.env.EXPO_PUBLIC_API_URL!;
+
 type ApiResponse<T> = {
   data?: T;
   error?: string;

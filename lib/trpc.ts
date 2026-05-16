@@ -1,9 +1,11 @@
-import { createTRPCReact } from "@trpc/react-query";
 import { httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
-import type { AppRouter } from "@/server/routers";
 import { getApiBaseUrl } from "@/constants/oauth";
 import * as Auth from "@/lib/_core/auth";
+import { createTRPCReact } from "@trpc/react-query";
+import type { AppRouter } from "@/server/routers";
+
+export const api = createTRPCReact<AppRouter>();
 
 /**
  * tRPC React client for type-safe API calls.

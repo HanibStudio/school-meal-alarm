@@ -6,7 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import '../global.css';
-
+import { TRPCProvider } from "@/lib/trpc-provider";
 import { ThemeProvider } from '@/lib/theme-provider';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SettingsProvider } from '@/lib/settings-context';
@@ -30,6 +30,7 @@ function AppContent() {
 }
 
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -45,12 +46,17 @@ export default function RootLayout() {
   }
 
   return (
-    <CustomThemeProvider>
-      <ThemeProvider>
-        <SettingsProvider>
-          <AppContent />
-        </SettingsProvider>
-      </ThemeProvider>
-    </CustomThemeProvider>
+    <TRPCProvider>
+      <CustomThemeProvider>
+        <ThemeProvider>
+          <SettingsProvider>
+            <NavThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack />
+              <StatusBar style="auto" />
+            </NavThemeProvider>
+          </SettingsProvider>
+        </ThemeProvider>
+      </CustomThemeProvider>
+    </TRPCProvider>
   );
 }
